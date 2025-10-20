@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CreditTrack.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,9 +39,11 @@ builder.Services.AddScoped<ITransactionRepository, CreditTransactionRepository>(
 // -----------------------
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped< ProductService>();
 builder.Services.AddScoped<CreditTransactionService>(); // ✅ Register your service
 builder.Services.AddScoped<IAdminService, AdminService>();
-
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 // -----------------------
 // Swagger
 // -----------------------
@@ -100,7 +103,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 // ✅ CORS must come BEFORE Authentication & Authorization
 app.UseCors("AllowReactApp");
 

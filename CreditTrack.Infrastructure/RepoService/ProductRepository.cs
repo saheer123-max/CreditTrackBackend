@@ -2,6 +2,7 @@
 using CreditTrack.Domain.IRepo;
 using CreditTrack.Domain.Model;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -39,38 +40,119 @@ namespace CreditTrack.Infrastructure.RepoService
         }
 
 
-        //public async Task<Product> UpdateProductAsync(int productId, Product product)
-        //{
-        //    // 1. Check if product exists
-        //    string selectSql = @"SELECT * FROM Products WHERE Id = @Id AND IsDeleted = 0";
-        //    var existingProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
+        public async Task<Product> UpdateProductAsync(int productId, Product product)
+        {
+            // 1. Check if product exists
+            string selectSql = @"SELECT * FROM Products WHERE Id = @Id AND IsDeleted = 0";
+            var existingProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
 
-        //    if (existingProduct == null)
-        //        return null; // Service layer can handle exception
+            if (existingProduct == null)
+                return null; // Service layer can handle exception
 
-        //    // 2. Update product
-        //    string updateSql = @"
-        //UPDATE Products
-        //SET Name = @Name,
-        //    Price = @Price,
-        //    ImageUrl = @ImageUrl,
-        //    CategoryId = @CategoryId
-        //WHERE Id = @Id";
+            // 2. Update product
+            string updateSql = @"
+        UPDATE Products
+        SET Name = @Name,
+            Price = @Price,
+            ImageUrl = @ImageUrl,
+            CategoryId = @CategoryId
+        WHERE Id = @Id";
 
-        //    await _db.ExecuteAsync(updateSql, new
-        //    {
-        //        Id = productId,
-        //        Name = product.Name,
-        //        Price = product.Price,
-        //        ImageUrl = product.ImageUrl,
-        //        CategoryId = product.CategoryId
-        //    });
+            await _db.ExecuteAsync(updateSql, new
+            {
+                Id = productId,
+                Name = product.Name,
+                Price = product.Price,
+                ImageUrl = product.ImageUrl,
+                CategoryId = product.CategoryId
+            });
 
-        //    // 3. Return updated entity
-        //    var updatedProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
-        //    return updatedProduct;
-        //}
+            // 3. Return updated entity
+            var updatedProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
+            return updatedProduct;
+        }
 
+
+        public async Task<bool> SoftDeleteProductAsync(int productId)
+        {
+            string sql = @"UPDATE Products 
+                   SET IsDeleted = 1 
+                   WHERE Id = @Id AND IsDeleted = 0";
+
+            var rowsAffected = await _db.ExecuteAsync(sql, new { Id = productId });
+
+            return rowsAffected > 0; // true if delete successful
+        }
+
+
+
+        public async Task<Product> GetByIdAsync(int productId)
+        {
+            string sql = @"SELECT * FROM Products WHERE Id = @Id AND IsDeleted = 0";
+            return await _db.QueryFirstOrDefaultAsync<Product>(sql, new { Id = productId });
+        }
+
+
+
+
+        public async Task<IEnumerable<Product>> GetAllWithCategoryAsync()
+        {
+           
+            var sql = @"SELECT p.*, c.Id, c.Name 
+                    FROM Products p
+                    INNER JOIN Category c ON p.CategoryId = c.Id
+                      WHERE p.isDeleted = 0";
+                        
+
+            var dict = new Dictionary<int, Product>();
+
+            var result = await _db.QueryAsync<Product, Category, Product>(
+                sql,
+                (product, category) =>
+                {
+                    if (!dict.TryGetValue(product.Id, out var current))
+                    {
+                        current = product;
+                        current.Category = category;
+                        dict.Add(current.Id, current);
+                    }
+                    return current;
+                },
+                splitOn: "Id"
+            );
+
+            return result.Distinct();
+        }
+
+        // Get products by category
+        public async Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId)
+        {
+          
+            var sql = @"SELECT p.*, c.Id, c.Name 
+                    FROM Products p
+                    INNER JOIN Category c ON p.CategoryId = c.Id
+                    WHERE c.Id = @CategoryId";
+
+            var dict = new Dictionary<int, Product>();
+
+            var result = await _db.QueryAsync<Product, Category, Product>(
+                sql,
+                (product, category) =>
+                {
+                    if (!dict.TryGetValue(product.Id, out var current))
+                    {
+                        current = product;
+                        current.Category = category;
+                        dict.Add(current.Id, current);
+                    }
+                    return current;
+                },
+                new { CategoryId = categoryId },
+                splitOn: "Id"
+            );
+
+            return result.Distinct();
+        }
 
     }
 }

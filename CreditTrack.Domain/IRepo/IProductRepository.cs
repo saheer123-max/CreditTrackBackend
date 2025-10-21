@@ -18,6 +18,10 @@ namespace CreditTrack.Domain.IRepo
 
        Task<Product> UpdateProductAsync(int productId, Product product);
 
+        Task<bool> SoftDeleteProductAsync(int productId);
 
+        Task<Product> GetByIdAsync(int productId);
+        Task<IEnumerable<Product>> GetAllWithCategoryAsync();
+        Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId);
     }
 }

@@ -39,6 +39,7 @@ builder.Services.AddScoped<ITransactionRepository, CreditTransactionRepository>(
 // -----------------------
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<UserService>();
+
 builder.Services.AddScoped< ProductService>();
 builder.Services.AddScoped<CreditTransactionService>(); // ✅ Register your service
 builder.Services.AddScoped<IAdminService, AdminService>();

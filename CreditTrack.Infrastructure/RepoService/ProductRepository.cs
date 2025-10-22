@@ -43,11 +43,15 @@ namespace CreditTrack.Infrastructure.RepoService
         public async Task<Product> UpdateProductAsync(int productId, Product product)
         {
             // 1. Check if product exists
-            string selectSql = @"SELECT * FROM Products WHERE Id = @Id AND IsDeleted = 0";
-            var existingProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
+            string checkSql = @"IF EXISTS (SELECT 1 FROM Products WHERE Id = @Id AND IsDeleted = 0)
+                    SELECT 1
+                    ELSE
+                    SELECT 0";
 
-            if (existingProduct == null)
-                return null; // Service layer can handle exception
+int exists = await _db.ExecuteScalarAsync<int>(checkSql, new { Id = productId });
+
+if (exists == 0)
+    return null; // Service layer can handle exception
 
             // 2. Update product
             string updateSql = @"
@@ -68,7 +72,7 @@ namespace CreditTrack.Infrastructure.RepoService
             });
 
             // 3. Return updated entity
-            var updatedProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
+            var updatedProduct = await _db.QueryFirstOrDefaultAsync<Product>(updateSql, new { Id = productId });
             return updatedProduct;
         }
 

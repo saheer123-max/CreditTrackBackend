@@ -34,7 +34,7 @@ namespace CreditTrack.Infrastructure.Services
             return await _db.QueryAsync<User>(sql);
         }
 
-
+ 
 
     }
 }

@@ -28,5 +28,18 @@ namespace CreditTrack.Controllers
             return StatusCode(result.Success ? 200 : 400, result);
         }
 
+
+
+
+        //[HttpPost("login")]
+        //public async Task<IActionResult> Login([FromBody] LoginRequest loginReq)
+        //{
+        //    var result = await _userService.LoginAsync(loginReq);
+        //    if (!result.Success)
+        //        return BadRequest(result);
+
+        //    return Ok(result);
+        //}
+
     }
 }

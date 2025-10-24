@@ -9,6 +9,8 @@ using System.Data;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CreditTrack.Middleware;
+using CreditTrack.Infrastructure.Services;
+using CreditTrack.Chat;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,11 +24,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policy => policy
-            .WithOrigins("http://localhost:5173") // React app port
+            .WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials()); // optional, if using cookies
+            .AllowCredentials());
 });
+
 
 // -----------------------
 // Repositories
@@ -50,7 +53,7 @@ builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 // -----------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSignalR();
 // -----------------------
 // Dapper IDbConnection
 // -----------------------
@@ -106,8 +109,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 // ✅ CORS must come BEFORE Authentication & Authorization
-app.UseCors("AllowReactApp");
 
+app.UseCors("AllowReactApp");
+app.MapHub<ChatHub>("/chathub");
 app.UseAuthentication();   // 🔑 must come before UseAuthorization
 app.UseAuthorization();
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CreditTrack.Application.DTOs
 {
- public   class UserReq
+  public class UserReq
     {
         [Required]
         public string Username { get; set; }

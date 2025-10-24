@@ -8,7 +8,6 @@ namespace CreditTrack.Application.DTOs
 {
    public class UserRes
     {
-
         public int Id { get; set; }
         public string Username { get; set; }
     }

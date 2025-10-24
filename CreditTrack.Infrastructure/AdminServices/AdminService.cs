@@ -31,62 +31,95 @@ namespace CreditTrack.Application.Interfaces
 
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req)
         {
-            var sql = "SELECT * FROM Admins WHERE Username = @Username AND IsActive = 1";
-            var admin = await _db.QueryFirstOrDefaultAsync<Admin>(sql, new { Username = req.Username });
-
-            if (admin == null)
-                return ApiResponse<LoginResponse>.Fail("Invalid credentials.");
-
-            // check lockout
-            if (admin.LockoutUntil.HasValue && admin.LockoutUntil.Value > DateTime.UtcNow)
+            try
             {
-                var minsLeft = (admin.LockoutUntil.Value - DateTime.UtcNow).TotalMinutes;
-                return ApiResponse<LoginResponse>.Fail($"Account locked. Try after {Math.Ceiling(minsLeft)} minutes.");
-            }
+                // 1️⃣ Check if it's an Admin
+                var adminSql = "SELECT * FROM Admins WHERE Username = @Username AND IsActive = 1";
+                var admin = await _db.QueryFirstOrDefaultAsync<Admin>(adminSql, new { Username = req.Username });
 
-            // verify password
-            var verified = BCrypt.Net.BCrypt.Verify(req.Password, admin.PasswordHash);
-            if (!verified)
-            {
-                // increment failed attempts
-                admin.FailedAttempts += 1;
-                DateTime? lockoutUntil = null;
-                if (admin.FailedAttempts >= _maxFailed)
+                if (admin != null)
                 {
-                    lockoutUntil = DateTime.UtcNow.Add(_lockoutDuration);
-                    // reset failed attempts on lockout but you may want to keep value
-                    //admin.FailedAttempts = 0;
+                    // ----- ADMIN LOGIN LOGIC -----
+                    if (admin.LockoutUntil.HasValue && admin.LockoutUntil.Value > DateTime.UtcNow)
+                    {
+                        var minsLeft = (admin.LockoutUntil.Value - DateTime.UtcNow).TotalMinutes;
+                        return ApiResponse<LoginResponse>.Fail($"Account locked. Try after {Math.Ceiling(minsLeft)} minutes.");
+                    }
+
+                    bool verified = BCrypt.Net.BCrypt.Verify(req.Password, admin.PasswordHash);
+                    if (!verified)
+                    {
+                        admin.FailedAttempts += 1;
+                        DateTime? lockoutUntil = null;
+
+                        if (admin.FailedAttempts >= _maxFailed)
+                        {
+                            lockoutUntil = DateTime.UtcNow.Add(_lockoutDuration);
+                        }
+
+                        var updSql = "UPDATE Admins SET FailedAttempts = @FailedAttempts, LockoutUntil = @LockoutUntil WHERE Id = @Id";
+                        await _db.ExecuteAsync(updSql, new { admin.FailedAttempts, lockoutUntil, admin.Id });
+
+                        if (lockoutUntil.HasValue)
+                            return ApiResponse<LoginResponse>.Fail($"Too many failed attempts. Account locked until {lockoutUntil.Value:u} UTC.");
+
+                        return ApiResponse<LoginResponse>.Fail($"Invalid credentials. {_maxFailed - admin.FailedAttempts} attempts left.");
+                    }
+
+                    // Success - reset lockout
+                    var resetSql = "UPDATE Admins SET FailedAttempts = 0, LockoutUntil = NULL WHERE Id = @Id";
+                    await _db.ExecuteAsync(resetSql, new { admin.Id });
+
+                    // JWT generate
+                    var token = GenerateToken(admin);
+
+                    var resp = new LoginResponse
+                    {
+                        Token = token.token,
+                        ExpiresAt = token.expiresAt,
+                        Username = admin.Username,
+                        Role = "Admin"
+                    };
+
+                    return ApiResponse<LoginResponse>.Ok(resp, "Admin login successful.");
                 }
 
-                var updSql = "UPDATE Admins SET FailedAttempts = @FailedAttempts, LockoutUntil = @LockoutUntil WHERE Id = @Id";
-                await _db.ExecuteAsync(updSql, new { FailedAttempts = admin.FailedAttempts, LockoutUntil = lockoutUntil, Id = admin.Id });
+                // 2️⃣ Otherwise, check for a normal User
+                var userSql = "SELECT * FROM Users WHERE Username = @Username AND IsActive = 1";
+                var user = await _db.QueryFirstOrDefaultAsync<User>(userSql, new { Username = req.Username });
 
-                if (lockoutUntil.HasValue)
-                    return ApiResponse<LoginResponse>.Fail($"Too many failed attempts. Account locked until {lockoutUntil.Value.ToUniversalTime():u} UTC.");
+                if (user == null)
+                    return ApiResponse<LoginResponse>.Fail("Invalid username or password.");
 
-                return ApiResponse<LoginResponse>.Fail($"Invalid credentials. {_maxFailed - admin.FailedAttempts} attempts left.");
+                bool userVerified = BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash);
+                if (!userVerified)
+                    return ApiResponse<LoginResponse>.Fail("Invalid username or password.");
+
+                // ✅ No lockout for user
+
+                // Generate JWT token
+                var userToken = GenerateToken(user);
+
+                var userResp = new LoginResponse
+                {
+                    Token = userToken.token,
+                    ExpiresAt = userToken.expiresAt,
+                    Username = user.Username,
+                    Role = "User",
+                     UserId = user.Id
+                };
+
+                return ApiResponse<LoginResponse>.Ok(userResp, "User login successful.");
             }
-
-            // success: reset failed attempts and lockout
-            var resetSql = "UPDATE Admins SET FailedAttempts = 0, LockoutUntil = NULL WHERE Id = @Id";
-            await _db.ExecuteAsync(resetSql, new { Id = admin.Id });
-
-            // generate JWT
-            var token = GenerateToken(admin);
-
-            var resp = new LoginResponse
+            catch (Exception ex)
             {
-                Token = token.token,
-                ExpiresAt = token.expiresAt,
-                Username = admin.Username,
-                Role = admin.Role
-            };
-
-            return ApiResponse<LoginResponse>.Ok(resp, "Login successful.");
+                return ApiResponse<LoginResponse>.Fail("Error: " + ex.Message);
+            }
         }
 
 
-        private (string token, DateTime expiresAt) GenerateToken(Admin admin)
+
+        private (string token, DateTime expiresAt) GenerateToken(object entity)
         {
             var jwtSection = _cfg.GetSection("Jwt");
             var key = jwtSection.GetValue<string>("Key")!;
@@ -94,12 +127,35 @@ namespace CreditTrack.Application.Interfaces
             var audience = jwtSection.GetValue<string>("Audience");
             var expiryMinutes = jwtSection.GetValue<int>("ExpiresMinutes");
 
+            string id;
+            string username;
+            string role;
+
+            // entity Admin ആണോ എന്ന് പരിശോധിക്കുന്നു
+            if (entity is Admin admin)
+            {
+                id = admin.Id.ToString();
+                username = admin.Username;
+                role = admin.Role;
+            }
+            // entity User ആണോ എന്ന് പരിശോധിക്കുന്നു
+            else if (entity is User user)
+            {
+                id = user.Id.ToString();
+                username = user.Username;
+                role = user.Role ?? "User"; // role ഇല്ലെങ്കിൽ default "User"
+            }
+            else
+            {
+                throw new Exception("Invalid entity type for JWT generation.");
+            }
+
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, admin.Id.ToString()),
-        new Claim(JwtRegisteredClaimNames.UniqueName, admin.Username),
-        new Claim(ClaimTypes.Role, admin.Role),
-        new Claim("uid", admin.Id.ToString())
+        new Claim(JwtRegisteredClaimNames.Sub, id),
+        new Claim(JwtRegisteredClaimNames.UniqueName, username),
+        new Claim(ClaimTypes.Role, role),
+        new Claim("uid", id)
     };
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -119,6 +175,7 @@ namespace CreditTrack.Application.Interfaces
 
             return (token, expiresAt);
         }
+
 
         // Seed admin at startup if not exists
         public async Task EnsureSeedAdminAsync()

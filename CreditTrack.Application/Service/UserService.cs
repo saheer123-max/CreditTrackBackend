@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CreditTrack.Application.DTOs;
+using BCrypt.Net;
 
 namespace CreditTrack.Application.Service
 {
@@ -27,29 +28,32 @@ namespace CreditTrack.Application.Service
         {
             try
             {
-                // Check duplicate email
+                // 1. Check duplicate email
                 var existingUser = await _userRepo.GetUserByEmailAsync(userReq.Email);
                 if (existingUser != null)
                     return ApiResponse<User>.Fail("Email already exists. Please use a different email.");
 
-                // Generate random password
+                // 2. Generate random password
                 string password = GeneratePassword();
 
-                // Map UserReq → User
+                // 3. Hash password with BCrypt
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+
+                // 4. Map UserReq → User
                 var newUser = new User
                 {
                     Username = userReq.Username,
                     Email = userReq.Email,
-                    PasswordHash = HashPassword(password),
+                    PasswordHash = hashedPassword,
                     Role = userReq.Role,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // Save to DB
+                // 5. Save to DB
                 int userId = await _userRepo.CreateUserAsync(newUser);
 
-                // Send email
+                // 6. Send email
                 string subject = "Your Account Details";
                 string body = $"Username: {newUser.Username}\nPassword: {password}";
                 await _emailService.SendEmailAsync(newUser.Email, subject, body);
@@ -62,6 +66,7 @@ namespace CreditTrack.Application.Service
             }
         }
 
+
         private string GeneratePassword(int length = 8)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -72,13 +77,8 @@ namespace CreditTrack.Application.Service
             return new string(password);
         }
 
-        private string HashPassword(string password)
-        {
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var hash = sha.ComputeHash(bytes);
-            return Convert.ToBase64String(hash);
-        }
+     
+
 
 
 
@@ -105,6 +105,64 @@ namespace CreditTrack.Application.Service
                 return ApiResponse<IEnumerable<UserRes>>.Fail("Error: " + ex.Message);
             }
         }
+
+
+        public async Task<ApiResponse<User>> LoginAsync(LoginRequest loginReq)
+        {
+            try
+            {
+                // 1. Find user by username or email
+                var user = await _userRepo.GetUserByUsernameAsync(loginReq.Username);
+                if (user == null)
+                    return ApiResponse<User>.Fail("Invalid username or password.");
+
+                // 2. Check if user is active
+                if (!user.IsActive)
+                    return ApiResponse<User>.Fail("Your account is inactive. Please contact support.");
+
+                // 3. Verify password using BCrypt
+                bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginReq.Password, user.PasswordHash);
+                if (!isPasswordValid)
+                    return ApiResponse<User>.Fail("Invalid username or password.");
+
+                // 4. Success response
+                return ApiResponse<User>.Ok(user, "Login successful.");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<User>.Fail("Error: " + ex.Message);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     }
 };

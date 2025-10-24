@@ -10,10 +10,12 @@ namespace CreditTrack.API.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+     
 
         public AdminController(IAdminService adminService)
         {
             _adminService = adminService;
+
         }
 
         /// <summary>
@@ -44,5 +46,10 @@ namespace CreditTrack.API.Controllers
             await _adminService.EnsureSeedAdminAsync();
             return Ok(ApiResponse<string>.Ok("Admin seed completed."));
         }
+
+  
+
+
+
     }
 }

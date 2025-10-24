@@ -13,6 +13,6 @@ namespace CreditTrack.Domain.IRepo
         Task<User> GetUserByEmailAsync(string email);
         Task<IEnumerable<User>> GetAllUsersAsync();
 
-       
+        Task<User> GetUserByUsernameAsync(string username);
     }
 }

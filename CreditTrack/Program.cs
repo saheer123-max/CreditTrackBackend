@@ -48,6 +48,8 @@ builder.Services.AddScoped<CreditTransactionService>(); // ✅ Register your ser
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 // -----------------------
 // Swagger
 // -----------------------

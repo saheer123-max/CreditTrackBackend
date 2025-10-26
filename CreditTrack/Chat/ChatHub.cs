@@ -1,95 +1,104 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using CreditTrack.Application.DTOs;
+using CreditTrack.Application.Interfaces;
 
 namespace CreditTrack.Chat
 {
     public class ChatHub : Hub
     {
+        private readonly IChatService _chatService;
+
+        // 🟢 Static variables to store connected users
         private static string AdminConnectionId;
+        private static readonly ConcurrentDictionary<string, string> Customers = new();
 
-        // CustomerId -> ConnectionId mapping
-        private static ConcurrentDictionary<string, string> Customers = new();
-
-        // Queue pending messages to admin if admin is not connected yet
-        private static ConcurrentQueue<(string senderId, string message)> PendingMessagesToAdmin = new();
+        public ChatHub(IChatService chatService)
+        {
+            _chatService = chatService;
+        }
 
         public override async Task OnConnectedAsync()
         {
-            var role = Context.GetHttpContext().Request.Query["role"];
-            var userId = Context.GetHttpContext().Request.Query["userId"];
+            var httpContext = Context.GetHttpContext();
+            var role = httpContext?.Request.Query["role"].ToString();
+            var userId = httpContext?.Request.Query["userId"].ToString();
 
+            if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(userId))
+            {
+                await base.OnConnectedAsync();
+                return;
+            }
+
+            // ✅ Store connection IDs
             if (role == "admin")
             {
                 AdminConnectionId = Context.ConnectionId;
-
-                // എല്ലാം connected customers admin-ന് notify ചെയ്യുക
-                foreach (var customer in Customers)
-                {
-                    await Clients.Client(AdminConnectionId).SendAsync("NewCustomerJoined", customer.Key);
-                }
+                Console.WriteLine($"✅ Admin connected: {AdminConnectionId}");
             }
             else
             {
                 Customers[userId] = Context.ConnectionId;
+                Console.WriteLine($"🟢 Customer connected: {userId}");
 
-                if (!string.IsNullOrEmpty(AdminConnectionId))
+                // 🔔 Notify admin that a new customer joined
+                if (AdminConnectionId != null)
                 {
                     await Clients.Client(AdminConnectionId).SendAsync("NewCustomerJoined", userId);
                 }
+
+             
             }
 
             await base.OnConnectedAsync();
         }
 
-
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        public async Task SendMessage(string senderId, string receiverId, string message)
         {
-            var role = Context.GetHttpContext().Request.Query["role"];
-            var userId = Context.GetHttpContext().Request.Query["userId"];
+            if (string.IsNullOrEmpty(senderId) || string.IsNullOrEmpty(receiverId) || string.IsNullOrEmpty(message))
+                return;
 
-            Console.WriteLine($"[Disconnected] Role: {role}, UserId: {userId}, ConnectionId: {Context.ConnectionId}");
+            var chatMessage = new ChatMessageDto
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                Message = message
+            };
 
-            if (role == "admin")
+            // 💾 Save message in DB
+            await _chatService.SaveMessageAsync(chatMessage);
+
+            // 🟡 Send to Admin
+            if (receiverId == "admin" && AdminConnectionId != null)
+            {
+                await Clients.Client(AdminConnectionId).SendAsync("ReceiveMessage", senderId, message);
+            }
+            // 🟢 Send to Customer
+            else if (Customers.TryGetValue(receiverId, out var connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("ReceiveMessage", senderId, message);
+            }
+        }
+
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            // ❌ Remove disconnected customer
+            var disconnectedUser = Customers.FirstOrDefault(x => x.Value == Context.ConnectionId);
+            if (!string.IsNullOrEmpty(disconnectedUser.Key))
+            {
+                Customers.TryRemove(disconnectedUser.Key, out _);
+                Console.WriteLine($"🔴 Customer disconnected: {disconnectedUser.Key}");
+            }
+
+            // ❌ Remove admin connection if admin disconnected
+            if (AdminConnectionId == Context.ConnectionId)
             {
                 AdminConnectionId = null;
-                Console.WriteLine("[Admin Disconnected]");
-            }
-            else
-            {
-                Customers.TryRemove(userId, out _);
-                Console.WriteLine($"[Customer Disconnected] UserId: {userId}");
+                Console.WriteLine("⚠️ Admin disconnected");
             }
 
             await base.OnDisconnectedAsync(exception);
-        }
-
-        // Send message from customer to admin or admin to customer
-        public async Task SendMessage(string senderId, string receiverId, string message)
-        {
-            Console.WriteLine($"[SendMessage] SenderId: {senderId}, ReceiverId: {receiverId}, Message: {message}");
-
-            if (receiverId == "admin")
-            {
-                if (AdminConnectionId != null)
-                {
-                    Console.WriteLine($"[Deliver to Admin] SenderId: {senderId}");
-                    await Clients.Client(AdminConnectionId).SendAsync("ReceiveMessage", senderId, message);
-                }
-                else
-                {
-                    Console.WriteLine($"[Queue message to Admin] SenderId: {senderId}");
-                    PendingMessagesToAdmin.Enqueue((senderId, message));
-                }
-            }
-            else if (Customers.TryGetValue(receiverId, out var connectionId))
-            {
-                Console.WriteLine($"[Deliver to Customer] ReceiverId: {receiverId}");
-                await Clients.Client(connectionId).SendAsync("ReceiveMessage", senderId, message);
-            }
-            else
-            {
-                Console.WriteLine($"[Send Failed] Receiver not connected: {receiverId}");
-            }
         }
     }
 }

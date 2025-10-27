@@ -35,14 +35,15 @@ namespace CreditTrack.Infrastructure.RepoService
         public async Task<IEnumerable<string>> GetAllChatUsersAsync()
         {
             string sql = @"
-                SELECT DISTINCT
-                    CASE
-                        WHEN SenderId = 'admin' THEN ReceiverId
-                        ELSE SenderId
-                    END AS UserId
-                FROM ChatMessages
-                WHERE SenderId = 'admin' OR ReceiverId = 'admin'
-            ";
+    SELECT DISTINCT
+        CASE
+            WHEN SenderId = '26' THEN ReceiverId
+            ELSE SenderId
+        END AS UserId
+    FROM ChatMessages
+    WHERE SenderId = '26' OR ReceiverId = '26'
+";
+
 
             var users = await _db.QueryAsync<string>(sql);
             return users;
@@ -55,8 +56,8 @@ namespace CreditTrack.Infrastructure.RepoService
         {
             string sql = @"
                 SELECT * FROM ChatMessages
-                WHERE (SenderId = @UserId AND ReceiverId = 'admin')
-                   OR (SenderId = 'admin' AND ReceiverId = @UserId)
+                WHERE (SenderId = @UserId AND ReceiverId = '26')
+                   OR (SenderId = '26' AND ReceiverId = @UserId)
                 ORDER BY CreatedAt ASC
             ";
 

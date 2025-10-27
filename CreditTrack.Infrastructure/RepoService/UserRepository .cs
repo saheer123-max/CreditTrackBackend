@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using System.Data.Common;
 
 namespace CreditTrack.Infrastructure.Services
 {
@@ -44,6 +45,21 @@ namespace CreditTrack.Infrastructure.Services
         {
             string sql = "SELECT * FROM Users ORDER BY CreatedAt DESC";
             return await _db.QueryAsync<User>(sql);
+        }
+
+
+
+
+
+
+        public async Task<IEnumerable<User>> SearchUsersAsync(string keyword)
+        {
+            string query = @"SELECT Id, Username, Email 
+                             FROM Users 
+                             WHERE Username LIKE @Keyword"
+            ;
+
+            return await _db.QueryAsync<User>(query, new { Keyword = $"%{keyword}%" });
         }
     }
 }

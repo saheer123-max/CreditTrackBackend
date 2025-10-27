@@ -14,5 +14,8 @@ namespace CreditTrack.Domain.IRepo
         Task<IEnumerable<User>> GetAllUsersAsync();
 
         Task<User> GetUserByUsernameAsync(string username);
+
+
+        Task<IEnumerable<User>> SearchUsersAsync(string keyword);
     }
 }

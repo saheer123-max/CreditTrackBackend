@@ -114,6 +114,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors("AllowReactApp");
 app.MapHub<ChatHub>("/chathub");
+app.MapHub<SearchHub>("/searchhub");
 app.UseAuthentication();   // 🔑 must come before UseAuthorization
 app.UseAuthorization();
 

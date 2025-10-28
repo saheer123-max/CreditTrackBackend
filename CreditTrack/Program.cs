@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CreditTrack.Middleware;
 using CreditTrack.Infrastructure.Services;
 using CreditTrack.Chat;
+using YourProject.WebAPI.Hubs;
+using YourProject.Application.Services;
+using YourProject.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +53,8 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
+builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
 // -----------------------
 // Swagger
 // -----------------------
@@ -115,6 +120,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("AllowReactApp");
 app.MapHub<ChatHub>("/chathub");
 app.MapHub<SearchHub>("/searchhub");
+app.MapHub<AnnouncementHub>("/announcementHub");
 app.UseAuthentication();   // 🔑 must come before UseAuthorization
 app.UseAuthorization();
 

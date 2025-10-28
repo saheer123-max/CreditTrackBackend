@@ -14,7 +14,7 @@ using AutoMapper;
 
 namespace CreditTrack.Application.Service
 {
-    public class ProductService
+    public class ProductService: IProductService
     {
 
         private readonly IProductRepository _repo;
@@ -98,34 +98,42 @@ namespace CreditTrack.Application.Service
 
         }
 
-        public async Task<ApiResponse<Product>> UpdateProductAsync(int productId, Product product)
+        public async Task<ApiResponse<Product>> UpdateProductAsync(int productId, ProductDto dto)
         {
             try
             {
-                if (product == null)
+                var existingProduct = await _repo.GetByIdAsync(productId);
+                if (existingProduct == null)
+                    return ApiResponse<Product>.Fail("Product not found");
+
+                existingProduct.Name = dto.Name;
+                existingProduct.Price = dto.Price;
+                existingProduct.CategoryId = dto.CategoryId;
+
+                // ✅ Cloudinary upload logic
+                if (dto.Image != null)
                 {
-                    _logger.LogWarning("UpdateProductAsync called with null Product");
-                    return ApiResponse<Product>.Fail("Product data cannot be null");
+                    string imageUrl = await _cloudinary.UploadImageAsync(dto.Image);
+                    existingProduct.ImageUrl = imageUrl;
                 }
 
-                // Repository call directly with Product
-                var updatedProduct = await _repo.UpdateProductAsync(productId, product);
+                // ✅ രണ്ടും argument pass ചെയ്യണം ഇവിടെ
+                var updatedProduct = await _repo.UpdateProductAsync(productId, existingProduct);
 
                 if (updatedProduct == null)
-                {
-                    _logger.LogWarning("Product with ID {ProductId} not found or deleted.", productId);
-                    return ApiResponse<Product>.Fail($"Product with ID {productId} not found or deleted");
-                }
+                    return ApiResponse<Product>.Fail("Unable to update product");
 
-                _logger.LogInformation("Product with ID {ProductId} updated successfully.", productId);
                 return ApiResponse<Product>.Ok(updatedProduct, "Product updated successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating product with ID {ProductId}", productId);
+                _logger.LogError(ex, "Error updating product");
                 return ApiResponse<Product>.Fail("Internal server error");
             }
         }
+
+
+
 
 
 

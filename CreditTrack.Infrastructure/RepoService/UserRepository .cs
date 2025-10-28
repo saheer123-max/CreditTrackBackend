@@ -43,7 +43,7 @@ namespace CreditTrack.Infrastructure.Services
         // ✅ Get all users
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
-            string sql = "SELECT * FROM Users ORDER BY CreatedAt DESC";
+            string sql = "SELECT * FROM Users WHERE Role <> 'Admin' ORDER BY CreatedAt DESC";
             return await _db.QueryAsync<User>(sql);
         }
 
@@ -61,5 +61,52 @@ namespace CreditTrack.Infrastructure.Services
 
             return await _db.QueryAsync<User>(query, new { Keyword = $"%{keyword}%" });
         }
+
+
+
+
+
+        public async Task<(int totalCustomers, int totalSuppliers)> GetUserCountsAsync()
+        {
+            string customerSql = "SELECT COUNT(*) FROM Users WHERE Role = 'customer'";
+            string supplierSql = "SELECT COUNT(*) FROM Users WHERE Role = 'supplier'";
+
+            int totalCustomers = await _db.ExecuteScalarAsync<int>(customerSql);
+            int totalSuppliers = await _db.ExecuteScalarAsync<int>(supplierSql);
+
+            return (totalCustomers, totalSuppliers);
+        }
+
+
+
+        public async Task<(decimal totalGiven, decimal totalReceived)> GetTransactionTotalsAsync()
+        {
+            string totalGivenSql = "SELECT ISNULL(SUM(Amount), 0) FROM CreditTransactions WHERE Type = 'Gave'";
+            string totalReceivedSql = "SELECT ISNULL(SUM(Amount), 0) FROM CreditTransactions WHERE Type = 'Received'";
+
+            decimal totalGiven = await _db.ExecuteScalarAsync<decimal>(totalGivenSql);
+            decimal totalReceived = await _db.ExecuteScalarAsync<decimal>(totalReceivedSql);
+
+            return (totalGiven, totalReceived);
+        }
+
+
+
+        public async Task<IEnumerable<User>> GetCustomersAsync()
+        {
+            string sql = "SELECT * FROM Users WHERE Role = 'customer'";
+            return await _db.QueryAsync<User>(sql);
+        }
+
+
+
+
+        public async Task<IEnumerable<User>> GetSuppliersAsync()
+        {
+            string sql = "SELECT * FROM Users WHERE Role = 'supplier'";
+            return await _db.QueryAsync<User>(sql);
+        }
+
+
     }
 }

@@ -31,6 +31,41 @@ namespace CreditTrack.Controllers
 
 
 
+
+        [HttpGet("user-counts")]
+        public async Task<IActionResult> GetUserCounts()
+        {
+            var result = await _userService.GetUserCountsAsync();
+            return Ok(result);
+        }
+
+
+        [HttpGet("customers")]
+        public async Task<IActionResult> GetCustomers()
+        {
+            var customers = await _userService.GetCustomersAsync();
+            return Ok(customers);
+        }
+
+        [HttpGet("suppliers")]
+        public async Task<IActionResult> GetSuppliers()
+        {
+            var suppliers = await _userService.GetSuppliersAsync();
+            return Ok(suppliers);
+        }
+
+
+
+        [HttpGet("totals")]
+        public async Task<IActionResult> GetTransactionTotals()
+        {
+            var result = await _userService.GetTransactionTotalsAsync();
+            return Ok(result);
+        }
+
+
+
+
         //[HttpPost("login")]
         //public async Task<IActionResult> Login([FromBody] LoginRequest loginReq)
         //{

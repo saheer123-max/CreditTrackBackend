@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CreditTrack.Application.DTOs;
 using BCrypt.Net;
+using Microsoft.Extensions.Logging;
 
 namespace CreditTrack.Application.Service
 {
@@ -17,6 +18,7 @@ namespace CreditTrack.Application.Service
     {
         private readonly IUserRepository _userRepo;
         private readonly IEmailService _emailService;
+        private readonly ILogger<UserService> _logger;
 
         public UserService(IUserRepository userRepo, IEmailService emailService)
         {
@@ -95,7 +97,8 @@ namespace CreditTrack.Application.Service
                 var UserRes = users.Select(u => new UserRes
                 {
                     Id = u.Id,
-                    Username = u.Username
+                    Username = u.Username,
+                    Role=u.Role
                 });
                 return ApiResponse<IEnumerable<UserRes>>.Ok(UserRes, "Users fetched successfully.");
             }
@@ -140,29 +143,85 @@ namespace CreditTrack.Application.Service
 
 
 
+        public async Task<object> GetUserCountsAsync()
+        {
+            var (totalCustomers, totalSuppliers) = await _userRepo.GetUserCountsAsync();
+
+            return new
+            {
+                TotalCustomers = totalCustomers,
+                TotalSuppliers = totalSuppliers
+            };
+        }
+
+
+
+
+        public async Task<object> GetTransactionTotalsAsync()
+        {
+            var (totalGiven, totalReceived) = await _userRepo.GetTransactionTotalsAsync();
+
+            return new
+            {
+                TotalGiven = totalGiven,
+                TotalReceived = totalReceived
+            };
+        }
 
 
 
 
 
+        public async Task<IEnumerable<User>> GetCustomersAsync()
+        {
+            try
+            {
+                return await _userRepo.GetCustomersAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching customers");
+                throw;
+            }
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        public async Task<IEnumerable<User>> GetSuppliersAsync()
+        {
+            try
+            {
+                return await _userRepo.GetSuppliersAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching suppliers");
+                throw;
+            }
+        }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };

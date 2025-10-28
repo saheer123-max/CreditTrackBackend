@@ -17,5 +17,14 @@ namespace CreditTrack.Domain.IRepo
 
 
         Task<IEnumerable<User>> SearchUsersAsync(string keyword);
+
+
+
+        Task<(int totalCustomers, int totalSuppliers)> GetUserCountsAsync();
+
+        Task<(decimal totalGiven, decimal totalReceived)> GetTransactionTotalsAsync();
+        Task<IEnumerable<User>> GetCustomersAsync();
+        Task<IEnumerable<User>> GetSuppliersAsync();
+
     }
 }

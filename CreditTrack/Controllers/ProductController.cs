@@ -34,11 +34,11 @@ namespace CreditTrack.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromForm] Product product)
+        public async Task<IActionResult> UpdateProduct(int id, [FromForm] ProductDto productDto)
         {
            
 
-            var response = await _service.UpdateProductAsync(id, product);
+            var response = await _service.UpdateProductAsync(id, productDto);
 
             if (!response.Success)
                 return BadRequest(response);

@@ -35,7 +35,7 @@ namespace CreditTrack.Infrastructure.RepoService
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
-            string sql = @"SELECT * FROM Products";
+            string sql = @"SELECT * FROM Products   WHERE  IsDeleted = 0";
             return await _db.QueryAsync<Product>(sql);
         }
 

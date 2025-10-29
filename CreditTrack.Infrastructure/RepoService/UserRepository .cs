@@ -82,7 +82,7 @@ namespace CreditTrack.Infrastructure.Services
         public async Task<(decimal totalGiven, decimal totalReceived)> GetTransactionTotalsAsync()
         {
             string totalGivenSql = "SELECT ISNULL(SUM(Amount), 0) FROM CreditTransactions WHERE Type = 'Gave'";
-            string totalReceivedSql = "SELECT ISNULL(SUM(Amount), 0) FROM CreditTransactions WHERE Type = 'Received'";
+            string totalReceivedSql = "SELECT ISNULL(SUM(Amount), 0) FROM CreditTransactions WHERE Type = 'Receive'";
 
             decimal totalGiven = await _db.ExecuteScalarAsync<decimal>(totalGivenSql);
             decimal totalReceived = await _db.ExecuteScalarAsync<decimal>(totalReceivedSql);

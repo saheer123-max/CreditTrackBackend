@@ -14,7 +14,10 @@ using CreditTrack.Chat;
 using YourProject.WebAPI.Hubs;
 using YourProject.Application.Services;
 using YourProject.Infrastructure.Repositories;
-
+using MediatR;
+using CreditTrack.Application.Commands.Products;
+using CreditTrack.Application.Handlers.Products;
+using System.Reflection;
 var builder = WebApplication.CreateBuilder(args);
 
 // -----------------------
@@ -55,6 +58,15 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly)
+);
+
+
+//builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
+//builder.Services.AddMediatR(typeof(CreateProductHandler).Assembly);
+
 // -----------------------
 // Swagger
 // -----------------------
@@ -83,6 +95,8 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+
+
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = true;

@@ -1,92 +1,70 @@
-﻿using CreditTrack.Application.DTOs;
-using CreditTrack.Application.Service;
+﻿using CreditTrack.Application.Commands.Products;
+using CreditTrack.Application.DTOs;
+using CreditTrack.Application.Queries.Products;
 using CreditTrack.Domain.Model;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace CreditTrack.Controllers
+namespace CreditTrack.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
     {
-        private readonly ProductService _service;
+        private readonly IMediator _mediator;
 
-        public ProductController(ProductService service)
+        public ProductController(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddProduct([FromForm] ProductDto dto)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromForm] ProductDto dto)
         {
-            var response = await _service.AddProductAsync(dto);
-            if (!response.Success)
-                return BadRequest(response);
-
-            return Ok(response);
+            var command = new CreateProductCommand(dto);
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromForm] ProductDto dto)
         {
-            var products = await _service.GetAllAsync();
+            var updatedProduct = await _mediator.Send(new UpdateProductCommand(id, dto));
+            if (updatedProduct == null)
+                return NotFound("Product not found!");
+
+            return Ok(new { Message = "✅ Product Updated Successfully", updatedProduct });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await _mediator.Send(new DeleteProductCommand(id));
+            if (!success) return NotFound("Product not found!");
+            return Ok(new { Message = "🗑️ Product Deleted Successfully" });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var product = await _mediator.Send(new GetProductByIdQuery(id));
+            if (product == null) return NotFound("Product not found!");
+            return Ok(product);
+        }
+
+        [HttpGet("category/{categoryId}")]
+        public async Task<IActionResult> GetByCategory(int categoryId)
+        {
+            var products = await _mediator.Send(new GetProductsByCategoryQuery(categoryId));
             return Ok(products);
         }
 
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromForm] ProductDto productDto)
+        [HttpGet]
+        public async Task<IEnumerable<Product>> GetAll()
         {
-           
-
-            var response = await _service.UpdateProductAsync(id, productDto);
-
-            if (!response.Success)
-                return BadRequest(response);
-
-            return Ok(response);
-        }
-
-
-
-
-
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> SoftDeleteProduct(int id)
-        {
-            var response = await _service.SoftDeleteProductAsync(id);
-
-            if (!response.Success)
-                return NotFound(response);
-
-            return Ok(response);
-        }
-
-
-
-
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var response = await _service.GetByIdAsync(id);
-            if (!response.Success) return NotFound(response);
-            return Ok(response);
-        }
-
-
-
-
-        [HttpGet("catogory")]
-        public async Task<IActionResult> GetAlls()
-        {
-            var response = await _service.GetAllProductsAsync();
-            return response.Success ? Ok(response) : BadRequest(response);
-        }
-
-        [HttpGet("category/{id}")]
-        public async Task<IActionResult> GetByCategory(int id)
-        {
-            var response = await _service.GetProductsByCategoryAsync(id);
-            return response.Success ? Ok(response) : BadRequest(response);
+            return await _mediator.Send(new GetAllProductsQuery());
         }
     }
-};
+}

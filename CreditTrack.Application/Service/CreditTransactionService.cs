@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CreditTrack.Application.DTOs;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Domain.Model;
 namespace CreditTrack.Application.Service
 {
@@ -83,6 +83,18 @@ namespace CreditTrack.Application.Service
         {
             return await _repository.GetUserTransactionsAsync(userId);
         }
+
+
+
+
+        public async Task<(List<TopUserDto> topGivers, List<TopUserDto> topReceivers)> GetTopUsersAsync()
+        {
+            var topGivers = await _repository.GetTopGiversAsync();
+            var topReceivers = await _repository.GetTopReceiversAsync();
+
+            return (topGivers, topReceivers);
+        }
+
 
     }
 }

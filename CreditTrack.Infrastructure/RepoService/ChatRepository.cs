@@ -1,4 +1,4 @@
-﻿using CreditTrack.Domain.IRepo;
+﻿using CreditTrack.Application.IRepo;
 using System;
 using System.Collections.Generic;
 using System.Data;

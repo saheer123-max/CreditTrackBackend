@@ -1,5 +1,5 @@
 ﻿using CreditTrack.Application.Commands.Products;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;

@@ -22,5 +22,10 @@ namespace CreditTrack.Application.Interfaces
         Task<IEnumerable<User>> GetCustomersAsync();
         Task<IEnumerable<User>> GetSuppliersAsync();
 
+
+       
+
+
+
     }
 }

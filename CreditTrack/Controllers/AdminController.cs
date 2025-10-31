@@ -2,9 +2,11 @@
 using CreditTrack.Application.DTOs;
 using CreditTrack.Application.Interfaces;
 using CreditTrack.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CreditTrack.API.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -23,6 +25,10 @@ namespace CreditTrack.API.Controllers
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
+        /// 
+
+        [AllowAnonymous]
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
@@ -41,6 +47,7 @@ namespace CreditTrack.API.Controllers
         /// Optional: Seed admin (usually called at startup)
         /// </summary>
         [HttpPost("seed")]
+
         public async Task<IActionResult> SeedAdmin()
         {
             await _adminService.EnsureSeedAdminAsync();

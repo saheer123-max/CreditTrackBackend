@@ -8,7 +8,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 
 using Microsoft.Extensions.Configuration;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Domain.Model;
 using System.Data;
 

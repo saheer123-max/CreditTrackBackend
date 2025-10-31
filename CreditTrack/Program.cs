@@ -1,6 +1,6 @@
 ﻿using CreditTrack.Application.Interfaces;
 using CreditTrack.Application.Service;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Infrastructure.RepoService;
 using CreditTrack.Infrastructure.Services;
 using Microsoft.Data.SqlClient;

@@ -1,4 +1,4 @@
-﻿using CreditTrack.Domain.IRepo;
+﻿using CreditTrack.Application.IRepo;
 using Microsoft.AspNetCore.SignalR;
 
 

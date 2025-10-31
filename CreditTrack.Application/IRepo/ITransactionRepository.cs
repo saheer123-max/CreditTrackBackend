@@ -1,11 +1,12 @@
-﻿using CreditTrack.Domain.Model;
+﻿using CreditTrack.Application.DTOs;
+using CreditTrack.Domain.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CreditTrack.Domain.IRepo
+namespace CreditTrack.Application.IRepo
 {
   public  interface ITransactionRepository
     {
@@ -17,7 +18,8 @@ namespace CreditTrack.Domain.IRepo
         Task UpdateUserBalanceAsync(int userId, decimal newBalance);
         Task<decimal> GetTotalBalanceAsync();
 
-
+        Task<List<TopUserDto>> GetTopGiversAsync();
+        Task<List<TopUserDto>> GetTopReceiversAsync();
 
     }
 }

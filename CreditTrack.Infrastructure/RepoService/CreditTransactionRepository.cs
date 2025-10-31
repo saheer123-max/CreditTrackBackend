@@ -1,12 +1,15 @@
-﻿using CreditTrack.Domain.IRepo;
+﻿using CreditTrack.Application.DTOs;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Domain.Model;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace CreditTrack.Infrastructure.RepoService
 {
@@ -78,6 +81,60 @@ namespace CreditTrack.Infrastructure.RepoService
 
             return await _db.QueryAsync<CreditTransaction>(sql, new { UserId = userId });
         }
+
+
+
+        public async Task<List<TopUserDto>> GetTopGiversAsync()
+        { 
+
+            string query = @"
+                SELECT TOP 3 
+                    U.Id AS UserId,
+                    U.UserName,
+                    SUM(C.Amount) AS TotalAmount
+                FROM CreditTransactions C
+                JOIN Users U ON C.UserId = U.Id
+                WHERE C.Type = 'Gave'
+                GROUP BY U.Id, U.UserName
+                ORDER BY TotalAmount DESC;";
+
+            var result = await _db.QueryAsync<TopUserDto>(query);
+            return result.AsList();
+        }
+
+        public async Task<List<TopUserDto>> GetTopReceiversAsync()
+        {
+
+
+            string query = @"
+                SELECT TOP 3 
+                    U.Id AS UserId,
+                    U.UserName,
+                    SUM(C.Amount) AS TotalAmount
+                FROM CreditTransactions C
+                JOIN Users U ON C.UserId = U.Id
+                WHERE C.Type = 'Receive'
+                GROUP BY U.Id, U.UserName
+                ORDER BY TotalAmount DESC;";
+
+            var result = await _db.QueryAsync<TopUserDto>(query);
+            return result.AsList();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     }
 }

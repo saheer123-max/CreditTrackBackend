@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Application.DTOs;
 using CreditTrack.Domain.Model;
 using CreditTrack.Domain.Common;

@@ -1,6 +1,6 @@
 ﻿using CreditTrack.Domain.Common;
 using CreditTrack.Application.Interfaces;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Domain.Model;
 using System.Security.Cryptography;
 using System;

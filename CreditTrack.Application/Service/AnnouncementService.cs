@@ -1,5 +1,5 @@
 ﻿using CreditTrack.Application.Interfaces;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Domain.Model;
 
 

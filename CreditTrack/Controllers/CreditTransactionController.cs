@@ -1,10 +1,13 @@
 ﻿using CreditTrack.Application.DTOs;
 using CreditTrack.Application.Service;
 using CreditTrack.Domain.Common; // ApiResponse
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CreditTrack.Controllers
 {
+
+
     [ApiController]
     [Route("api/[controller]")]
     public class CreditTransactionController : ControllerBase
@@ -82,6 +85,28 @@ namespace CreditTrack.Controllers
         {
             var transactions = await _service.GetUserHistoryAsync(userId);
             return Ok(new { success = true, message = "User transaction history fetched successfully", data = transactions });
+        }
+
+
+
+
+
+        [HttpGet("top-users")]
+        public async Task<IActionResult> GetTopUsers()
+        {
+            var result = await _service.GetTopUsersAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Top givers and receivers fetched successfully",
+                data = new
+                {
+                    topGivers = result.topGivers,
+                    topReceivers = result.topReceivers
+                }
+            });
+
         }
     }
 }

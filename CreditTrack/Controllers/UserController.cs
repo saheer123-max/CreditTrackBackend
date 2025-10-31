@@ -2,9 +2,12 @@
 using CreditTrack.Domain.Model;
 using Microsoft.AspNetCore.Mvc;
 using CreditTrack.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CreditTrack.Controllers
 {
+
+   
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase

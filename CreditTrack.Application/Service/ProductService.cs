@@ -1,5 +1,5 @@
 ﻿using CreditTrack.Application.Interfaces;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using CreditTrack.Domain.Common;
 using CreditTrack.Application.DTOs;
 using CreditTrack.Domain.Model;
 using AutoMapper;
-
+using CreditTrack.Application.IRepo;
 
 namespace CreditTrack.Application.Service
 {

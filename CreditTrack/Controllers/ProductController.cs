@@ -3,6 +3,7 @@ using CreditTrack.Application.DTOs;
 using CreditTrack.Application.Queries.Products;
 using CreditTrack.Domain.Model;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,8 +20,7 @@ namespace CreditTrack.API.Controllers
         {
             _mediator = mediator;
         }
-
-        [HttpPost]
+      
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] ProductDto dto)
         {
@@ -28,6 +28,7 @@ namespace CreditTrack.API.Controllers
             var result = await _mediator.Send(command);
             return Ok(result);
         }
+      
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] ProductDto dto)
         {
@@ -37,7 +38,7 @@ namespace CreditTrack.API.Controllers
 
             return Ok(new { Message = "✅ Product Updated Successfully", updatedProduct });
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -45,7 +46,7 @@ namespace CreditTrack.API.Controllers
             if (!success) return NotFound("Product not found!");
             return Ok(new { Message = "🗑️ Product Deleted Successfully" });
         }
-
+     
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {

@@ -1,5 +1,6 @@
 ﻿using CreditTrack.Application.DTOs;
 using CreditTrack.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -12,6 +13,7 @@ public class ChatController : ControllerBase
     {
         _chatService = chatService;
     }
+
 
     [HttpGet("users")]
     public async Task<IActionResult> GetAllUsers()

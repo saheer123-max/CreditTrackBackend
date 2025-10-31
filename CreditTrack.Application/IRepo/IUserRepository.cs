@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CreditTrack.Domain.IRepo
+namespace CreditTrack.Application.IRepo
 {
   public  interface IUserRepository
     {

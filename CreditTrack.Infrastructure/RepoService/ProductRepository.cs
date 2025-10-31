@@ -1,5 +1,5 @@
 ﻿using CreditTrack.Application.DTOs;
-using CreditTrack.Domain.IRepo;
+using CreditTrack.Application.IRepo;
 using CreditTrack.Domain.Model;
 using Dapper;
 using Microsoft.Data.SqlClient;

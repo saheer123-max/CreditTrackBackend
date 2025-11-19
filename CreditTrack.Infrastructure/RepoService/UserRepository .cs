@@ -17,7 +17,6 @@ namespace CreditTrack.Infrastructure.Services
 
         public UserRepository(IDbConnection db) => _db = db;
 
-        // ✅ Create a new user
         public async Task<int> CreateUserAsync(User user)
         {
             string sql = @"INSERT INTO Users (Username, Email, PasswordHash, IsActive, CreatedAt, Role)
@@ -26,21 +25,21 @@ namespace CreditTrack.Infrastructure.Services
             return await _db.QuerySingleAsync<int>(sql, user);
         }
 
-        // ✅ Get user by email
+
         public async Task<User> GetUserByEmailAsync(string email)
         {
             string sql = "SELECT * FROM Users WHERE Email = @Email";
             return await _db.QueryFirstOrDefaultAsync<User>(sql, new { Email = email });
         }
 
-        // ✅ Get user by username
+
         public async Task<User> GetUserByUsernameAsync(string username)
         {
             string sql = "SELECT * FROM Users WHERE Username = @Username";
             return await _db.QueryFirstOrDefaultAsync<User>(sql, new { Username = username });
         }
 
-        // ✅ Get all users
+
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
             string sql = "SELECT * FROM Users WHERE Role <> 'Admin' ORDER BY CreatedAt DESC";

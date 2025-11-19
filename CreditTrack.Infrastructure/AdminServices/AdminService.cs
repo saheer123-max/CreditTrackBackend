@@ -26,14 +26,13 @@ namespace CreditTrack.Application.Interfaces
             _logger = logger;
         }
 
-        // Login method for Admin + Customer/User
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req)
         {
             try
             {
                 _logger.LogInformation("Login attempt started for user: {Username}", req.Username);
 
-                // 1️⃣ Fetch user from Users table (any role)
+            
                 var sql = "SELECT * FROM Users WHERE Username = @Username";
                 var user = await _db.QueryFirstOrDefaultAsync<User>(sql, new { Username = req.Username });
 
@@ -43,7 +42,7 @@ namespace CreditTrack.Application.Interfaces
                     return ApiResponse<LoginResponse>.Fail("Invalid credentials.");
                 }
 
-                // 2️⃣ Verify password
+          
                 bool verified = BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash);
                 if (!verified)
                 {
@@ -51,7 +50,6 @@ namespace CreditTrack.Application.Interfaces
                     return ApiResponse<LoginResponse>.Fail("Invalid credentials.");
                 }
 
-                // 3️⃣ Generate JWT token
                 var token = GenerateToken(user);
 
                 var resp = new LoginResponse
@@ -79,7 +77,7 @@ namespace CreditTrack.Application.Interfaces
             }
         }
 
-        // JWT Token generation
+
         private (string token, DateTime expiresAt) GenerateToken(User user)
         {
             _logger.LogInformation("Generating JWT token for user: {Username}", user.Username);
@@ -117,7 +115,7 @@ namespace CreditTrack.Application.Interfaces
             return (token, expiresAt);
         }
 
-        // Seed admin at startup if not exists
+      
         public async Task EnsureSeedAdminAsync()
         {
             _logger.LogInformation("Checking if admin user exists...");

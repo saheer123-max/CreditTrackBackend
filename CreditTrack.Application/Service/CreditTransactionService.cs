@@ -38,7 +38,7 @@ namespace CreditTrack.Application.Service
             await _repository.AddGaveAsync(transaction);
 
             var currentBalance = await _repository.GetUserBalanceAsync(userId);
-            var newBalance = currentBalance + amount; // Gave -> balance increases
+            var newBalance = currentBalance + amount; 
             await _repository.UpdateUserBalanceAsync(userId, newBalance);
             return newBalance;
 
@@ -59,9 +59,9 @@ namespace CreditTrack.Application.Service
 
             await _repository.AddReceiveAsync(transaction);
 
-            // Balance update
+      
             var currentBalance = await _repository.GetUserBalanceAsync(userId);
-            var newBalance = currentBalance - amount; // Receive -> balance decreases
+            var newBalance = currentBalance - amount; 
             await _repository.UpdateUserBalanceAsync(userId, newBalance);
 
             return newBalance;

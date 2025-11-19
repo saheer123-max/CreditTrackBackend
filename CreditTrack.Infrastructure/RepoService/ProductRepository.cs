@@ -42,7 +42,7 @@ namespace CreditTrack.Infrastructure.RepoService
 
         public async Task<Product> UpdateProductAsync(int productId, Product product)
         {
-            // 1️⃣ Check if product exists
+           
             string checkSql = @"IF EXISTS (SELECT 1 FROM Products WHERE Id = @Id AND IsDeleted = 0)
                         SELECT 1 ELSE SELECT 0";
 
@@ -50,7 +50,6 @@ namespace CreditTrack.Infrastructure.RepoService
             if (exists == 0)
                 return null;
 
-            // 2️⃣ Update the product
             string updateSql = @"
         UPDATE Products
         SET Name = @Name,
@@ -68,7 +67,7 @@ namespace CreditTrack.Infrastructure.RepoService
                 CategoryId = product.CategoryId
             });
 
-            // 3️⃣ Fetch updated product using SELECT
+     
             string selectSql = @"SELECT * FROM Products WHERE Id = @Id AND IsDeleted = 0";
             var updatedProduct = await _db.QueryFirstOrDefaultAsync<Product>(selectSql, new { Id = productId });
 
@@ -84,7 +83,7 @@ namespace CreditTrack.Infrastructure.RepoService
 
             var rowsAffected = await _db.ExecuteAsync(sql, new { Id = productId });
 
-            return rowsAffected > 0; // true if delete successful
+            return rowsAffected > 0; 
         }
 
 
@@ -127,7 +126,7 @@ namespace CreditTrack.Infrastructure.RepoService
             return result.Distinct();
         }
 
-        // Get products by category
+      
         public async Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId)
         {
           

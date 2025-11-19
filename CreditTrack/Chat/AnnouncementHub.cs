@@ -16,7 +16,7 @@ namespace YourProject.WebAPI.Hubs
         {
             var saved = await _announcementService.CreateAnnouncementAsync(message);
 
-            // Broadcast to all connected users
+           
             await Clients.All.SendAsync("ReceiveAnnouncement", saved.Message);
         }
     }

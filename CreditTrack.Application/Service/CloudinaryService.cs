@@ -43,7 +43,7 @@ namespace CreditTrack.Application.Service
                     Folder = "products"
                 };
 
-                Console.WriteLine("Uploading image to Cloudinary..."); // Debug log
+                Console.WriteLine("Uploading image to Cloudinary..."); 
 
                 var result = await _cloudinary.UploadAsync(uploadParams);
 
@@ -56,20 +56,20 @@ namespace CreditTrack.Application.Service
                 if (result.Error != null)
                     throw new Exception($"Cloudinary upload error: {result.Error.Message}");
 
-                Console.WriteLine($"Upload successful! URL: {result.SecureUrl}"); // Debug log
+                Console.WriteLine($"Upload successful! URL: {result.SecureUrl}"); 
 
                 return result.SecureUrl.ToString();
             }
             catch (Exception ex)
             {
-                // Detailed debugging info
+               
                 Console.WriteLine("=== Cloudinary Upload Debug Info ===");
                 Console.WriteLine($"Exception Message: {ex.Message}");
                 if (ex.InnerException != null)
                     Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                Console.WriteLine("==================================");
+                Console.WriteLine("==");
 
-                throw; // propagate to service/controller
+                throw; 
             }
         }
 

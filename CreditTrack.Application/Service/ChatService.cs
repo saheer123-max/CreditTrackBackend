@@ -55,24 +55,24 @@ namespace CreditTrack.Application.Service
             try
             {
                 var users = await _repository.GetAllChatUsersAsync();
-                _logger.LogInformation("✅ Retrieved all chat users");
+                _logger.LogInformation(" Retrieved all chat users");
                 return users;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error while fetching chat users");
+                _logger.LogError(ex, " Error while fetching chat users");
                 return new List<string>();
             }
         }
 
-        // ✅ Get chat history (Entity → DTO)
+
         public async Task<IEnumerable<ChatMessageDto>> GetChatHistoryAsync(string userId)
         {
             try
             {
                 var history = await _repository.GetChatHistoryAsync(userId);
 
-                // 🔁 Manual mapping from entity to DTO
+
                 var response = history.Select(m => new ChatMessageDto
                 {
                     SenderId = m.SenderId,
@@ -81,12 +81,12 @@ namespace CreditTrack.Application.Service
                     CreatedAt = m.CreatedAt
                 }).ToList();
 
-                _logger.LogInformation($"✅ Fetched chat history for user: {userId}");
+                _logger.LogInformation($" Fetched chat history for user: {userId}");
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"❌ Error while fetching chat history for user {userId}");
+                _logger.LogError(ex, $" Error while fetching chat history for user {userId}");
                 return new List<ChatMessageDto>();
             }
         }

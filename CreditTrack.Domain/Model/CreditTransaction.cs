@@ -13,7 +13,7 @@ namespace CreditTrack.Domain.Model
         public int UserId { get; set; }
         public decimal Amount { get; set; }
         public DateTime TransactionDate { get; set; }
-        public string Type { get; set; } // "Gave" or "Receive"
+        public string Type { get; set; }
         public string Description { get; set; }
 
     }

@@ -1,6 +1,6 @@
 ﻿using CreditTrack.Application.DTOs;
 using CreditTrack.Application.Service;
-using CreditTrack.Domain.Common; // ApiResponse
+using CreditTrack.Domain.Common; 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

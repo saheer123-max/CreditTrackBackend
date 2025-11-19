@@ -36,7 +36,7 @@ namespace CreditTrack.API.Controllers
             if (updatedProduct == null)
                 return NotFound("Product not found!");
 
-            return Ok(new { Message = "✅ Product Updated Successfully", updatedProduct });
+            return Ok(new { Message = " Product Updated Successfully", updatedProduct });
         }
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
@@ -44,7 +44,7 @@ namespace CreditTrack.API.Controllers
         {
             var success = await _mediator.Send(new DeleteProductCommand(id));
             if (!success) return NotFound("Product not found!");
-            return Ok(new { Message = "🗑️ Product Deleted Successfully" });
+            return Ok(new { Message = " Product Deleted Successfully" });
         }
      
         [HttpGet("{id}")]

@@ -26,7 +26,7 @@ namespace CreditTrack.Infrastructure.RepoService
 
             using var smtp = new SmtpClient();
 
-            // SSL certificate validation bypass (development only)
+ 
             smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
             await smtp.ConnectAsync(_smtpHost, _smtpPort, SecureSocketOptions.StartTls);

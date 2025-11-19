@@ -30,18 +30,18 @@ namespace CreditTrack.Application.Service
         {
             try
             {
-                // 1. Check duplicate email
+            
                 var existingUser = await _userRepo.GetUserByEmailAsync(userReq.Email);
                 if (existingUser != null)
                     return ApiResponse<User>.Fail("Email already exists. Please use a different email.");
 
-                // 2. Generate random password
+              
                 string password = GeneratePassword();
 
-                // 3. Hash password with BCrypt
+           
                 string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
-                // 4. Map UserReq → User
+          
                 var newUser = new User
                 {
                     Username = userReq.Username,
@@ -52,10 +52,10 @@ namespace CreditTrack.Application.Service
                     CreatedAt = DateTime.UtcNow
                 };
 
-                // 5. Save to DB
+          
                 int userId = await _userRepo.CreateUserAsync(newUser);
 
-                // 6. Send email
+           
                 string subject = "Your Account Details";
                 string body = $"Username: {newUser.Username}\nPassword: {password}";
                 await _emailService.SendEmailAsync(newUser.Email, subject, body);

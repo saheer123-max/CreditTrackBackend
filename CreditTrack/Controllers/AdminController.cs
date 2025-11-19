@@ -20,12 +20,7 @@ namespace CreditTrack.API.Controllers
 
         }
 
-        /// <summary>
-        /// Admin login endpoint
-        /// </summary>
-        /// <param name="req"></param>
-        /// <returns></returns>
-        /// 
+   
 
         [AllowAnonymous]
 
@@ -38,14 +33,12 @@ namespace CreditTrack.API.Controllers
             var result = await _adminService.LoginAsync(req);
 
             if (!result.Success)
-                return Unauthorized(result); // failed login returns 401
+                return Unauthorized(result); 
 
-            return Ok(result); // success returns 200 with token
+            return Ok(result); 
         }
 
-        /// <summary>
-        /// Optional: Seed admin (usually called at startup)
-        /// </summary>
+
         [HttpPost("seed")]
 
         public async Task<IActionResult> SeedAdmin()

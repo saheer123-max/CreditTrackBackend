@@ -25,7 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------
 builder.Services.AddControllers();
 
-// CORS: React frontend allow ചെയ്യാൻ
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
@@ -37,20 +37,16 @@ builder.Services.AddCors(options =>
 });
 
 
-// -----------------------
-// Repositories
-// -----------------------
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITransactionRepository, CreditTransactionRepository>();
 
-// -----------------------
-// Services
-// -----------------------
+
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<UserService>();
 
 builder.Services.AddScoped< ProductService>();
-builder.Services.AddScoped<CreditTransactionService>(); // ✅ Register your service
+builder.Services.AddScoped<CreditTransactionService>(); 
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
@@ -64,27 +60,19 @@ builder.Services.AddMediatR(cfg =>
 );
 
 
-//builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
-//builder.Services.AddMediatR(typeof(CreateProductHandler).Assembly);
 
-// -----------------------
-// Swagger
-// -----------------------
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-// -----------------------
-// Dapper IDbConnection
-// -----------------------
+
 builder.Services.AddTransient<IDbConnection>(sp =>
 {
     var connStr = sp.GetRequiredService<IConfiguration>().GetConnectionString("Default");
     return new SqlConnection(connStr);
 });
 
-// -----------------------
-// JWT Authentication
-// -----------------------
+
 var jwt = builder.Configuration.GetSection("Jwt");
 var key = jwt.GetValue<string>("Key")!;
 var issuer = jwt.GetValue<string>("Issuer");
@@ -113,14 +101,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// -----------------------
-// Build app
-// -----------------------
+
 var app = builder.Build();
 
-// -----------------------
-// Configure pipeline
-// -----------------------
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -129,20 +113,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionMiddleware>();
-// ✅ CORS must come BEFORE Authentication & Authorization
+
 
 app.UseCors("AllowReactApp");
 app.MapHub<ChatHub>("/chathub");
 app.MapHub<SearchHub>("/searchhub");
 app.MapHub<AnnouncementHub>("/announcementHub");
-app.UseAuthentication();   // 🔑 must come before UseAuthorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();
 
-// -----------------------
-// Seed admin at startup
-// -----------------------
+
 using (var scope = app.Services.CreateScope())
 {
     var svc = scope.ServiceProvider.GetRequiredService<IAdminService>();

@@ -3,7 +3,7 @@ using CreditTrack.Application.Service;
 using CreditTrack.Application.IRepo;
 using CreditTrack.Infrastructure.RepoService;
 using CreditTrack.Infrastructure.Services;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.Text;
@@ -18,6 +18,7 @@ using MediatR;
 using CreditTrack.Application.Commands.Products;
 using CreditTrack.Application.Handlers.Products;
 using System.Reflection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // -----------------------
@@ -69,8 +70,9 @@ builder.Services.AddSignalR();
 builder.Services.AddTransient<IDbConnection>(sp =>
 {
     var connStr = sp.GetRequiredService<IConfiguration>().GetConnectionString("Default");
-    return new SqlConnection(connStr);
+    return new NpgsqlConnection(connStr); // ✅ FIXED
 });
+
 
 
 var jwt = builder.Configuration.GetSection("Jwt");

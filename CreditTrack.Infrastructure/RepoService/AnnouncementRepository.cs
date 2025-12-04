@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Dapper;
-using Microsoft.Data.SqlClient;
+
 
 using Microsoft.Extensions.Configuration;
 using CreditTrack.Application.IRepo;
@@ -27,23 +27,23 @@ namespace YourProject.Infrastructure.Repositories
 
         public async Task<int> CreateAsync(Announcement announcement)
         {
-            var sql = @"INSERT INTO Announcements (Message, CreatedAt) 
-                        VALUES (@Message, @CreatedAt);
-                        SELECT CAST(SCOPE_IDENTITY() as int);";
+            var sql = @"INSERT INTO announcements (message, createdat) 
+            VALUES (@Message, @CreatedAt)
+            RETURNING id;";
 
-            
-            
-                var id = await _db.QuerySingleAsync<int>(sql, announcement);
+
+
+            var id = await _db.QuerySingleAsync<int>(sql, announcement);
                 return id;
            
         }
 
         public async Task<IEnumerable<Announcement>> GetAllAsync()
         {
-            var sql = "SELECT * FROM Announcements ORDER BY CreatedAt DESC";
-              
-                       
-                return await _db.QueryAsync<Announcement>(sql);
+            var sql = "SELECT * FROM announcements ORDER BY createdat DESC";
+
+
+            return await _db.QueryAsync<Announcement>(sql);
             
         }
     }

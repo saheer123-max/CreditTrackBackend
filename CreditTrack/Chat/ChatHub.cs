@@ -24,7 +24,7 @@ namespace CreditTrack.Chat
         }
 
 
-        public override async Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()   
         {
             var httpContext = Context.GetHttpContext();
             var role = httpContext?.Request.Query["role"].ToString();
@@ -32,7 +32,7 @@ namespace CreditTrack.Chat
 
             if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(userId))
             {
-                _logger.LogWarning("⚠️ Connection missing role or userId");
+                _logger.LogWarning("⚠ Connection missing role or userId");
                 await base.OnConnectedAsync();
                 return;
             }
@@ -42,12 +42,12 @@ namespace CreditTrack.Chat
             {
                 AdminConnectionId = Context.ConnectionId;
                 AdminUserId = userId;
-                _logger.LogInformation("✅ Admin connected: {ConnectionId} (AdminId: {UserId})", AdminConnectionId, AdminUserId);
+                _logger.LogInformation(" Admin connected: {ConnectionId} (AdminId: {UserId})", AdminConnectionId, AdminUserId);
             }
             else
             {
                 Customers[userId] = Context.ConnectionId;
-                _logger.LogInformation("🟢 Customer connected: {UserId}", userId);
+                _logger.LogInformation(" Customer connected: {UserId}", userId);
 
                 if (AdminConnectionId != null)
                 {
@@ -65,11 +65,11 @@ namespace CreditTrack.Chat
             {
                 if (string.IsNullOrEmpty(senderId) || string.IsNullOrEmpty(receiverId) || string.IsNullOrEmpty(message))
                 {
-                    _logger.LogWarning("⚠️ SendMessage called with empty values. Sender={SenderId}, Receiver={ReceiverId}, Message={Message}", senderId, receiverId, message);
+                    _logger.LogWarning(" SendMessage called with empty values. Sender={SenderId}, Receiver={ReceiverId}, Message={Message}", senderId, receiverId, message);
                     return;
                 }
 
-                _logger.LogInformation("📩 SendMessage called: Sender={SenderId}, Receiver={ReceiverId}, Message={Message}", senderId, receiverId, message);
+                _logger.LogInformation(" SendMessage called: Sender={SenderId}, Receiver={ReceiverId}, Message={Message}", senderId, receiverId, message);
 
                 var chatMessage = new ChatMessageDto
                 {
@@ -83,22 +83,22 @@ namespace CreditTrack.Chat
          
                 if (receiverId == AdminUserId && AdminConnectionId != null)
                 {
-                    _logger.LogInformation("📤 Sending message to admin ({AdminUserId})", AdminUserId);
+                    _logger.LogInformation(" Sending message to admin ({AdminUserId})", AdminUserId);
                     await Clients.Client(AdminConnectionId).SendAsync("ReceiveMessage", senderId, message);
                 }
                 else if (Customers.TryGetValue(receiverId, out var connectionId))
                 {
-                    _logger.LogInformation("📤 Sending message to customer {ReceiverId}", receiverId);
+                    _logger.LogInformation(" Sending message to customer {ReceiverId}", receiverId);
                     await Clients.Client(connectionId).SendAsync("ReceiveMessage", senderId, message);
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No active SignalR connection found for receiver {ReceiverId}", receiverId);
+                    _logger.LogWarning(" No active SignalR connection found for receiver {ReceiverId}", receiverId);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ SendMessage Error - Sender={SenderId}, Receiver={ReceiverId}", senderId, receiverId);
+                _logger.LogError(ex, " SendMessage Error - Sender={SenderId}, Receiver={ReceiverId}", senderId, receiverId);
             }
         }
 
@@ -109,12 +109,12 @@ namespace CreditTrack.Chat
             if (!string.IsNullOrEmpty(disconnectedUser.Key))
             {
                 Customers.TryRemove(disconnectedUser.Key, out _);
-                _logger.LogInformation("🔴 Customer disconnected: {UserId}", disconnectedUser.Key);
+                _logger.LogInformation(" Customer disconnected: {UserId}", disconnectedUser.Key);
             }
 
             if (AdminConnectionId == Context.ConnectionId)
             {
-                _logger.LogWarning("⚠️ Admin disconnected: {AdminUserId}", AdminUserId);
+                _logger.LogWarning(" Admin disconnected: {AdminUserId}", AdminUserId);
                 AdminConnectionId = null;
                 AdminUserId = null;
             }

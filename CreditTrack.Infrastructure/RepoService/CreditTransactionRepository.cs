@@ -23,103 +23,112 @@ namespace CreditTrack.Infrastructure.RepoService
 
         public async Task AddGaveAsync(CreditTransaction transaction)
         {
-            string sql = @"INSERT INTO  CreditTransactions
-                         (UserId, Amount, TransactionDate, Type, Description)
-                         VALUES (@UserId, @Amount, @TransactionDate, 'Gave', @Description)";
-
-             await _db.ExecuteAsync(sql, transaction);
-        }
-
-
-        public  async Task AddReceiveAsync(CreditTransaction transaction)
-        {
-            string sql = @"INSERT INTO CreditTransactions 
-                      (UserId, Amount, TransactionDate, Type, Description)
-                       VALUES (@UserId, @Amount, @TransactionDate, 'Receive', @Description)";
+            string sql = @"
+        INSERT INTO credittransactions
+        (userid, amount, transactiondate, type, description)
+        VALUES (@UserId, @Amount, @TransactionDate, 'Gave', @Description);
+    ";
 
             await _db.ExecuteAsync(sql, transaction);
-  
         }
 
-        public async  Task <decimal> GetUserBalanceAsync(int userid)
+        public async Task AddReceiveAsync(CreditTransaction transaction)
         {
+            string sql = @"
+        INSERT INTO credittransactions
+        (userid, amount, transactiondate, type, description)
+        VALUES (@UserId, @Amount, @TransactionDate, 'Receive', @Description);
+    ";
 
-            string sql = @"SELECT  ISNULL(Balance,0)FROM UserBalance WHERE userId=@userId";
+            await _db.ExecuteAsync(sql, transaction);
+        }
 
-            return await _db.ExecuteScalarAsync<decimal>(sql, new { userId = userid });
+        public async Task<decimal> GetUserBalanceAsync(int userId)
+        {
+            string sql = @"
+        SELECT COALESCE(balance, 0)
+        FROM userbalance
+        WHERE userid = @userId;
+    ";
+
+            return await _db.ExecuteScalarAsync<decimal>(sql, new { userId });
         }
 
 
         public async Task UpdateUserBalanceAsync(int userId, decimal newBalance)
         {
-
             string sql = @"
-                IF EXISTS (SELECT 1 FROM UserBalance WHERE UserId = @UserId)
-                    UPDATE UserBalance SET Balance = @Balance WHERE UserId = @UserId
-                ELSE
-                    INSERT INTO UserBalance(UserId, Balance) VALUES(@UserId, @Balance)";
-
+        INSERT INTO userbalance (userid, balance)
+        VALUES (@UserId, @Balance)
+        ON CONFLICT (userid)
+        DO UPDATE SET balance = @Balance;
+    ";
 
             await _db.ExecuteAsync(sql, new { UserId = userId, Balance = newBalance });
-
-
         }
+
 
 
         public async Task<decimal> GetTotalBalanceAsync()
         {
-          
-            string sql = "SELECT SUM(Balance) FROM UserBalance";
+            string sql = @"SELECT SUM(""Balance"") FROM ""UserBalance"";";
             return await _db.ExecuteScalarAsync<decimal>(sql);
         }
 
         public async Task<IEnumerable<CreditTransaction>> GetUserTransactionsAsync(int userId)
         {
-            string sql = @"SELECT * FROM CreditTransactions 
-                           WHERE UserId = @UserId
-                           ORDER BY TransactionDate DESC";
+            string sql = @"
+        SELECT *
+        FROM credittransactions
+        WHERE userid = @UserId
+        ORDER BY transactiondate DESC;
+    ";
 
             return await _db.QueryAsync<CreditTransaction>(sql, new { UserId = userId });
         }
 
 
 
-        public async Task<List<TopUserDto>> GetTopGiversAsync()
-        { 
 
+        public async Task<List<TopUserDto>> GetTopGiversAsync()
+        {
             string query = @"
-                SELECT TOP 3 
-                    U.Id AS UserId,
-                    U.UserName,
-                    SUM(C.Amount) AS TotalAmount
-                FROM CreditTransactions C
-                JOIN Users U ON C.UserId = U.Id
-                WHERE C.Type = 'Gave'
-                GROUP BY U.Id, U.UserName
-                ORDER BY TotalAmount DESC;";
+        SELECT 
+            u.id AS userid,
+            u.username,
+            SUM(c.amount) AS totalamount
+        FROM credittransactions c
+        JOIN users u ON c.userid = u.id
+        WHERE c.type = 'Gave'
+        GROUP BY u.id, u.username
+        ORDER BY totalamount DESC
+        LIMIT 3;
+    ";
 
             var result = await _db.QueryAsync<TopUserDto>(query);
             return result.AsList();
         }
+
 
         public async Task<List<TopUserDto>> GetTopReceiversAsync()
         {
-
-
             string query = @"
-                SELECT TOP 3 
-                    U.Id AS UserId,
-                    U.UserName,
-                    SUM(C.Amount) AS TotalAmount
-                FROM CreditTransactions C
-                JOIN Users U ON C.UserId = U.Id
-                WHERE C.Type = 'Receive'
-                GROUP BY U.Id, U.UserName
-                ORDER BY TotalAmount DESC;";
+        SELECT 
+            u.id AS userid,
+            u.username,
+            SUM(c.amount) AS totalamount
+        FROM credittransactions c
+        JOIN users u ON c.userid = u.id
+        WHERE c.type = 'Receive'
+        GROUP BY u.id, u.username
+        ORDER BY totalamount DESC
+        LIMIT 3;
+    ";
 
             var result = await _db.QueryAsync<TopUserDto>(query);
             return result.AsList();
         }
+
 
 
 

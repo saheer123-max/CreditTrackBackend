@@ -32,8 +32,11 @@ namespace CreditTrack.Application.Interfaces
             {
                 _logger.LogInformation("Login attempt started for user: {Username}", req.Username);
 
-            
-                var sql = "SELECT * FROM Users WHERE Username = @Username";
+
+                var sql = "SELECT * FROM users WHERE username = @Username";
+
+
+
                 var user = await _db.QueryFirstOrDefaultAsync<User>(sql, new { Username = req.Username });
 
                 if (user == null)
@@ -132,8 +135,9 @@ namespace CreditTrack.Application.Interfaces
             _logger.LogInformation("Creating default admin user...");
 
             var hash = BCrypt.Net.BCrypt.HashPassword("Admin@123", workFactor: 12);
-            var insert = @"INSERT INTO Users (Username, Email, PasswordHash, Role, IsActive, CreatedAt)
-                           VALUES (@Username, @Email, @PasswordHash, @Role, 1, SYSUTCDATETIME())";
+            var insert = @"INSERT INTO users (Username, Email, PasswordHash, Role, IsActive, CreatedAt)
+              VALUES (@Username, @Email, @PasswordHash, @Role, true, NOW())";
+
 
             await _db.ExecuteAsync(insert, new
             {

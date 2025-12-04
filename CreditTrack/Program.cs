@@ -9,7 +9,6 @@ using System.Data;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using CreditTrack.Middleware;
-using CreditTrack.Infrastructure.Services;
 using CreditTrack.Chat;
 using YourProject.WebAPI.Hubs;
 using YourProject.Application.Services;
@@ -26,7 +25,6 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------
 builder.Services.AddControllers();
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
@@ -37,17 +35,12 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
-
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITransactionRepository, CreditTransactionRepository>();
-
-
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<UserService>();
-
-builder.Services.AddScoped< ProductService>();
-builder.Services.AddScoped<CreditTransactionService>(); 
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CreditTransactionService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
@@ -60,9 +53,6 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly)
 );
 
-
-
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
@@ -70,10 +60,8 @@ builder.Services.AddSignalR();
 builder.Services.AddTransient<IDbConnection>(sp =>
 {
     var connStr = sp.GetRequiredService<IConfiguration>().GetConnectionString("Default");
-    return new NpgsqlConnection(connStr); // ✅ FIXED
+    return new NpgsqlConnection(connStr);
 });
-
-
 
 var jwt = builder.Configuration.GetSection("Jwt");
 var key = jwt.GetValue<string>("Key")!;
@@ -85,11 +73,9 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-
-
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = true;
+    options.RequireHttpsMetadata = false; // IMPORTANT for Railway
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -103,28 +89,34 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
 var app = builder.Build();
 
+// ----------------------------------------
+// Always enable Swagger (Railway = Production)
+// ----------------------------------------
+app.UseSwagger();
+app.UseSwaggerUI();
 
- 
-    app.UseSwagger();
-    app.UseSwaggerUI();
- 
+// ❌ DO NOT USE HTTPS REDIRECTION IN RAILWAY
+// app.UseHttpsRedirection();
 
-app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
-
 app.UseCors("AllowReactApp");
+
 app.MapHub<ChatHub>("/chathub");
 app.MapHub<SearchHub>("/searchhub");
 app.MapHub<AnnouncementHub>("/announcementHub");
-app.UseAuthentication(); 
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
+// ----------------------------------------
+// DEFAULT: Redirect root URL → Swagger
+// ----------------------------------------
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 using (var scope = app.Services.CreateScope())
 {
